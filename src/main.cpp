@@ -106,8 +106,8 @@ void loop() {
     {
       recvdata = client.readStringUntil('\n');
       DP->WriteData(recvdata);
-      
-      Serial.println(recvdata);
+      DP->PrintData();
+      //Serial.println(recvdata);
     }
     
     
