@@ -2,7 +2,7 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
-
+#include <DataProcess.h>
 
 
 
@@ -21,7 +21,8 @@ int cpu_usage = -1;
 int net_usage = -1;
 int disk_usage = -1;
 
-int *Data_Array[4] = {&cpu_tmp,&cpu_usage,&net_usage,&disk_usage};
+DataProcess *DP = new DataProcess();
+
 
 WiFiClient client;
 
@@ -85,7 +86,6 @@ void setup() {
 
 
 
-
 }
 
 void loop() {
@@ -105,7 +105,7 @@ void loop() {
     if(client.available()>0)
     {
       recvdata = client.readStringUntil('\n');
-      WriteData(recvdata,Data_Array);
+      DP->WriteData(recvdata);
       
       Serial.println(recvdata);
     }
@@ -113,43 +113,4 @@ void loop() {
     
   }
   delay(1000);
-}
-
-void WriteData(String recvdata,int *DataArray[])
-{
-  int pData = 0;
-  int pre_found = -1;
-  int found = 0;
-  for(int i = 0;i<4;i++)
-  {
-
-    int k = 0;
-    found = recvdata.indexOf('|');
-
-    Serial.printf("pre_found:");
-    Serial.println(pre_found);
-    Serial.printf("found:");
-    Serial.println(found);
-
-    if(found != -1)
-    {
-      String data_tmp = "";
-      for(k = pre_found;k<found-1;k++)
-      {
-        data_tmp += recvdata[k+1];
-        recvdata[k+1] = ' ';
-        Serial.printf("data_tmp:");
-        Serial.println(data_tmp);
-      }
-      *DataArray[pData] = data_tmp.toInt();
-      Serial.printf("*DataArray[pData]:");
-      Serial.println(*DataArray[pData]);
-      pData++;
-      recvdata[found] = ' ';
-      pre_found = found;
-
-    }
-  }
-  
-
 }
