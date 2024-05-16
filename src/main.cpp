@@ -7,10 +7,10 @@
 
 
 int RetCode = -1;
-const char* ssd="WSGX";
-const char* pasd="wsgx88888";
+const char* ssd="latiao";
+const char* pasd="guangqinfu332601";
 
-const char * dst_addr = "192.168.100.13";
+const char * dst_addr = "192.168.2.6";
 const int dst_port = 8000;
 String recvdata = "";
 
@@ -20,6 +20,7 @@ int cpu_tmp = -1;
 int cpu_usage = -1;
 int net_usage = -1;
 int disk_usage = -1;
+
 
 DataProcess *DP = new DataProcess();
 
