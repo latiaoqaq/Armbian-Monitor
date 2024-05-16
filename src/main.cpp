@@ -3,6 +3,7 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <DataProcess.h>
+#include <FansControl.h>
 
 
 
@@ -23,6 +24,7 @@ int disk_usage = -1;
 
 
 DataProcess *DP = new DataProcess();
+FansControl *FC = new FansControl(2,5000,0,8);
 
 
 WiFiClient client;
@@ -85,7 +87,7 @@ void setup() {
 
   //timerAlarmEnable(tcp_timer);
 
-
+  FC->Setup();
 
 }
 
@@ -113,5 +115,8 @@ void loop() {
     
     
   }
+  Serial.printf("RSSI:");
+  Serial.println(WiFi.RSSI());
+  //FC->Start();
   delay(1000);
 }
