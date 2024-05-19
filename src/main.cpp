@@ -4,9 +4,9 @@
 #include <ArduinoJson.h>
 #include <DataProcess.h>
 #include <FansControl.h>
+#include <U8g2lib.h>
 
-
-
+U8G2_SSD1306_128X64_NONAME_F_HW_I2C oled(U8G2_R0,SDA,SCL,U8X8_PIN_NONE);
 int RetCode = -1;
 const char* ssd="latiao";
 const char* pasd="guangqinfu332601";
@@ -88,35 +88,73 @@ void setup() {
   //timerAlarmEnable(tcp_timer);
 
   FC->Setup();
-
+  FC->Stop();
+  //oled.enableUTF8Print();
+  oled.setContrast(200);
+  oled.setBusClock(400000);
+  
+  oled.begin();
+  oled.enableUTF8Print();
 }
 
 void loop() {
   Serial.println("MAIN");
 
+  int duration  = pulseIn(7, HIGH, 9000000);
+  Serial.println(duration);
+  // //检测TCP连接，如果断开那就重连
+  // if(!client.connected())
+  // {
+  //   client.stop();
+  //   client.connect(dst_addr,dst_port);
+  //   Serial.println("Connecting...");
+  // }
+  // else
+  // {
+  //   client.write('1');
+  //   if(client.available()>0)
+  //   {
+  //     recvdata = client.readStringUntil('\n');
+  //     Serial.println(recvdata);
+  //     DP->WriteData(recvdata);
+  //     DP->PrintData();
+  //     //Serial.println(recvdata);
+  //   }
+    
+    
+  // }
+  // //FC->Start();
 
-  //检测TCP连接，如果断开那就重连
-  if(!client.connected())
-  {
-    client.stop();
-    client.connect(dst_addr,dst_port);
-    Serial.println("Connecting...");
-  }
-  else
-  {
-    client.write('1');
-    if(client.available()>0)
-    {
-      recvdata = client.readStringUntil('\n');
-      DP->WriteData(recvdata);
-      DP->PrintData();
-      //Serial.println(recvdata);
-    }
-    
-    
-  }
-  Serial.printf("RSSI:");
-  Serial.println(WiFi.RSSI());
-  //FC->Start();
+  // char buf[10];
+
+
+  // static unsigned int start = millis();
+  // oled.clearBuffer();
+  // oled.setFont(u8g2_font_ncenB08_tr);
+  // itoa(DP->cpu_tmp,buf,10);
+  // oled.drawStr(0,10,"CPU TEMP:");
+  // oled.drawStr(80,10,buf);
+  // oled.drawStr(95,10,"C");
+  // itoa(DP->cpu_usage,buf,10);
+  // oled.drawStr(0,30,"CPU USAGE:");
+  // oled.drawStr(80,30,buf);
+  // oled.drawStr(95,30,"%");
+  // Serial.println(DP->ram_usage/1000);
+  // itoa(DP->ram_usage,buf,10);
+  // oled.drawStr(0,40,"RAM USAGE:");
+  // oled.drawStr(80,40,buf);
+  // oled.drawStr(110,40,"MB");
+  // itoa(DP->disk_usage,buf,10);
+  // oled.drawStr(0,50,"DISK USAGE:");
+  // oled.drawStr(80,50,buf);
+  // oled.drawStr(95,50,"%");
+  // itoa(WiFi.RSSI(),buf,10);
+  // oled.drawStr(0,60,buf); 
+  // oled.sendBuffer();
+  // static unsigned int end = millis();
+
+  
+  // Serial.println(end-start);
+
   delay(1000);
 }

@@ -7,15 +7,16 @@
     private:
         /* data */
         // 定义 PWM 参数
-        int _Pin = 0;
+        int _pin = 11;
         int _freq = 5000; // PWM 频率
         int _Channel = 0; // PWM 通道
         int _resolution = 8; // PWM 分辨率
     public:
-        FansControl(int pin,int freq,int Channel,int resolution);
+        FansControl(int pin = 11,int freq =10000,int Channel=0,int resolution=10);
         ~FansControl();
         int Start();
         int Setup();
+        int Stop();
 
     };
     
