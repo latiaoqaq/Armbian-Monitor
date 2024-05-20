@@ -24,7 +24,7 @@ int disk_usage = -1;
 
 
 DataProcess *DP = new DataProcess();
-FansControl *FC = new FansControl(2,5000,0,8);
+FansControl *FC = new FansControl(11,5000,0,8);
 
 
 WiFiClient client;
@@ -86,9 +86,11 @@ void setup() {
   client.connect(dst_addr,dst_port);
 
   //timerAlarmEnable(tcp_timer);
-
-  FC->Setup();
-  FC->Stop();
+  pinMode(0,OUTPUT);
+  ledcSetup(0, 10000, 10);
+  // 将 PWM 通道连接到引脚
+  ledcAttachPin(0, 0);
+  ledcWrite(0, 0);
   //oled.enableUTF8Print();
   oled.setContrast(200);
   oled.setBusClock(400000);
@@ -99,8 +101,8 @@ void setup() {
 
 void loop() {
   Serial.println("MAIN");
-
-  int duration  = pulseIn(7, HIGH, 9000000);
+  
+  unsigned long duration  = pulseIn(7, HIGH, 9000000);
   Serial.println(duration);
   // //检测TCP连接，如果断开那就重连
   // if(!client.connected())
