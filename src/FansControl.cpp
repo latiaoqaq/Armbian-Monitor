@@ -16,21 +16,22 @@ FansControl::~FansControl()
 
 int FansControl::Setup()
 {
-  pinMode(_pin,OUTPUT);
-  ledcSetup(_Channel, _freq, _resolution);
-  // 将 PWM 通道连接到引脚
-  ledcAttachPin(_pin, _Channel);
+  ledcSetup(0, 10000, 10);
+  ledcAttachPin(13,0);
+  //ledcWrite(0,1023);
+  // analogReadResolution(12); // 12位分辨率
+  // adcAttachPin(4);//将引脚连接到ADC
   return 1;
 }
 
 int FansControl::Start()
 {  
-  ledcWrite(_Channel, 512);
+  ledcWrite(0, 1023);
 }
 
 
 int FansControl::Stop()
 {
-  ledcWrite(_Channel, 0);
+  ledcWrite(0, 0);
 }
 
