@@ -1,5 +1,5 @@
 // #include <Arduino.h>
-// #include <WiFi.h>
+#include <WiFi.h>
 // #include <HTTPClient.h>
 // #include <ArduinoJson.h>
 // #include <DataProcess.h>
@@ -172,8 +172,13 @@
 #if LV_USE_TFT_ESPI
 #include <TFT_eSPI.h>
 #endif
+lv_obj_t * cpu_arc;
+lv_obj_t * ram_arc;
+lv_obj_t * disk_arc;
 static void value_changed_event_cb(lv_event_t * e);
-void lv_example_arc_1(void);
+lv_obj_t * lv_example_arc_1(void);
+lv_obj_t * lv_example_arc_2(void);
+lv_obj_t * lv_example_arc_3(void);
 /*To use the built-in examples and demos of LVGL uncomment the includes below respectively.
  *You also need to copy `lvgl/examples` to `lvgl/src/examples`. Similarly for the demos `lvgl/demos` to `lvgl/src/demos`.
  *Note that the `lv_examples` library is for LVGL v7 and you shouldn't install it for this version (since LVGL v8)
@@ -293,65 +298,238 @@ void setup()
     lv_obj_set_size(src,240,240);
     lv_obj_set_style_bg_color(src,lv_color_hex(0x3B2D23),0);
     //lv_obj_set_style_bg_opa(src,50,0);
-    lv_example_arc_1();
+    cpu_arc = lv_example_arc_1();
+    ram_arc = lv_example_arc_2();
+    disk_arc = lv_example_arc_3();
+
+    //Serial
+    Serial.begin(115200);
+    
     Serial.println( "Setup done" );
 }
 
 void loop()
 {
+    if(Serial.available())
+    {
+      String rcvdata = Serial.readStringUntil('\n');
+      int cpu_data = rcvdata.toInt();
+      Serial.println(cpu_data);
+      lv_arc_set_value(cpu_arc,cpu_data);
+      lv_obj_send_event(cpu_arc, LV_EVENT_VALUE_CHANGED,NULL);
+      lv_arc_set_value(disk_arc,cpu_data);
+      lv_obj_send_event(disk_arc, LV_EVENT_VALUE_CHANGED,NULL);
+      lv_arc_set_value(ram_arc,cpu_data);
+      lv_obj_send_event(ram_arc, LV_EVENT_VALUE_CHANGED,NULL);
+    }
     lv_task_handler(); /* let the GUI do its work */
     delay(5); /* let this time pass */
 }
 
-static void set_angle(void * obj, int32_t v)
+lv_obj_t* lv_example_arc_1(void)
 {
-    lv_arc_set_value((lv_obj_t*)obj, v);
-}
-
-void lv_example_arc_1(void)
-{
-    lv_obj_t * label = lv_label_create(lv_screen_active());
-
     /*Create an Arc*/
     lv_obj_t * arc = lv_arc_create(lv_screen_active());
-    lv_obj_set_size(arc, 70, 70);
-    lv_arc_set_rotation(arc, 135);
-    lv_arc_set_bg_angles(arc, 0, 270);
-    lv_arc_set_value(arc, 10);
-    lv_obj_set_pos(arc,40,40);
-    lv_obj_set_pos(label,40,40);
-    lv_obj_remove_style(arc, NULL, LV_PART_KNOB);
-    lv_obj_set_style_arc_width(arc,10,LV_PART_MAIN);
-    lv_obj_set_style_arc_width(arc,10,LV_PART_INDICATOR);
-    lv_obj_set_style_arc_color(arc, lv_color_hex(0x0f0f0f), LV_PART_MAIN);
-    lv_obj_set_style_arc_rounded(arc, true, LV_PART_MAIN);
-    //lv_obj_center(arc);
+    lv_obj_set_size(arc, 60, 60);
+    //lv_arc_set_rotation(arc, 135);
+    lv_arc_set_bg_angles(arc, 120, 60);
+    lv_arc_set_range(arc,0,80);
+    lv_arc_set_value(arc,23);
+    lv_obj_align(arc,LV_ALIGN_TOP_LEFT,10,10);
+    lv_obj_set_style_radius(arc,360,LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(arc,LV_OPA_COVER,LV_PART_MAIN);
+    lv_obj_set_style_bg_color(arc,lv_color_make(30,35,45),LV_PART_MAIN);
+    lv_obj_set_style_pad_all(arc,3,LV_PART_MAIN);
+    
+    lv_obj_t * panel3 = lv_obj_create(arc);
+    lv_obj_set_size(panel3,42,42);
+    lv_obj_align_to(panel3,arc,LV_ALIGN_CENTER,0,0);
+    lv_obj_set_style_radius(panel3,360,LV_PART_MAIN);
+    lv_obj_set_style_bg_color(panel3,lv_color_make(100,100,100),LV_PART_MAIN);
+    lv_obj_set_style_bg_grad_color(panel3,lv_color_make(60,65,75),LV_PART_MAIN);
+    lv_obj_set_style_bg_grad_dir(panel3,LV_GRAD_DIR_VER,LV_PART_MAIN);
+    lv_obj_set_style_arc_width(panel3,0.2,LV_PART_MAIN);
+    lv_obj_set_style_shadow_color(panel3,lv_color_make(5,10,15),LV_PART_MAIN);
+    lv_obj_set_style_shadow_width(panel3,8,LV_PART_MAIN);
+    lv_obj_set_style_shadow_spread(panel3,0,LV_PART_MAIN);
+    lv_obj_set_style_shadow_offset_x(panel3,0,LV_PART_MAIN);
+    lv_obj_set_style_shadow_offset_y(panel3,3,LV_PART_MAIN);
+    // lv_obj_t * panel_value = lv_obj_create(panel3);
+    // lv_obj_set_size(panel_value,30,30);
+    // lv_obj_align_to(panel_value,arc,LV_ALIGN_CENTER,0,0);
+    // lv_obj_set_style_radius(panel_value,360,LV_PART_MAIN);
+    // lv_obj_set_style_bg_color(panel_value,lv_color_make(12,25,30),LV_PART_MAIN);
+    // lv_obj_set_style_bg_grad_color(panel_value,lv_color_make(25,28,38),LV_PART_MAIN);
+    // lv_obj_set_style_bg_grad_dir(panel_value,LV_GRAD_DIR_VER,LV_PART_MAIN);
+    // lv_obj_set_style_arc_width(panel_value,0.2,LV_PART_MAIN);
+    // lv_obj_set_style_border_color(panel3,lv_color_make(90,100,110),LV_PART_MAIN);
+    
+    lv_obj_t * label = lv_label_create(panel3);
+    lv_label_set_text_fmt(label,"%d",23);
+    //lv_obj_set_style_text_align(label,LV_TEXT_ALIGN_CENTER,LV_PART_MAIN);
+    //lv_obj_set_style_pad_all(label,0,LV_PART_MAIN);
+
+    lv_obj_align(label,LV_ALIGN_CENTER,0,0);
+    lv_obj_set_style_bg_opa(label,0,LV_PART_MAIN);
+    //lv_obj_set_style_border_width(label,0,LV_PART_MAIN);
+    //lv_obj_set_style_border_color(label,0,LV_PART_MAIN);
+    //lv_style_set_text_font(label,&LV_FONT_MONTSERRAT_18,LV_PART_MAIN);
+    lv_obj_set_style_text_color(panel3,lv_color_make(255,255,255),LV_PART_MAIN);
     lv_obj_add_event_cb(arc, value_changed_event_cb, LV_EVENT_VALUE_CHANGED, label);
 
-    /*Manually update the label for the first time*/
-    lv_obj_send_event(arc, LV_EVENT_VALUE_CHANGED, NULL);
 
-    lv_anim_t a;
-    lv_anim_init(&a);
-    lv_anim_set_var(&a, arc);
-    lv_anim_set_exec_cb(&a, set_angle);
-    lv_anim_set_duration(&a, 1000);
-    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);    /*Just for the demo*/
-    lv_anim_set_repeat_delay(&a, 500);
-    lv_anim_set_values(&a, 0, 100);
-    lv_anim_start(&a);
+    lv_obj_remove_style(arc, NULL, LV_PART_KNOB);
+    lv_obj_set_style_arc_width(arc,5,LV_PART_MAIN);
+    lv_obj_set_style_arc_width(arc,5,LV_PART_INDICATOR);
+    lv_obj_set_style_arc_color(arc, lv_color_hex(0x0f0f0f), LV_PART_MAIN);
+    lv_obj_set_style_arc_rounded(arc, true, LV_PART_MAIN);
+
+
+    //lv_obj_center(arc);
+
+    /*Manually update the label for the first time*/
+    //lv_obj_send_event(arc, LV_EVENT_VALUE_CHANGED,NULL);
+
+
+    return arc;
 
 }
+lv_obj_t * lv_example_arc_2(void)
+{
+    /*Create an Arc*/
+    lv_obj_t * arc = lv_arc_create(lv_screen_active());
+    lv_obj_set_size(arc, 60, 60);
+    //lv_arc_set_rotation(arc, 135);
+    lv_arc_set_bg_angles(arc, 120, 60);
+    lv_arc_set_range(arc,0,4096);
+    lv_arc_set_value(arc,23);
+    lv_obj_align(arc,LV_ALIGN_TOP_MID,0,10);
+    lv_obj_set_style_radius(arc,360,LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(arc,LV_OPA_COVER,LV_PART_MAIN);
+    lv_obj_set_style_bg_color(arc,lv_color_make(30,35,45),LV_PART_MAIN);
+    lv_obj_set_style_pad_all(arc,3,LV_PART_MAIN);
+    
+    lv_obj_t * panel3 = lv_obj_create(arc);
+    lv_obj_set_size(panel3,42,42);
+    lv_obj_align_to(panel3,arc,LV_ALIGN_CENTER,0,0);
+    lv_obj_set_style_radius(panel3,360,LV_PART_MAIN);
+    lv_obj_set_style_bg_color(panel3,lv_color_make(100,100,100),LV_PART_MAIN);
+    lv_obj_set_style_bg_grad_color(panel3,lv_color_make(60,65,75),LV_PART_MAIN);
+    lv_obj_set_style_bg_grad_dir(panel3,LV_GRAD_DIR_VER,LV_PART_MAIN);
+    lv_obj_set_style_arc_width(panel3,0.2,LV_PART_MAIN);
+    lv_obj_set_style_shadow_color(panel3,lv_color_make(5,10,15),LV_PART_MAIN);
+    lv_obj_set_style_shadow_width(panel3,8,LV_PART_MAIN);
+    lv_obj_set_style_shadow_spread(panel3,0,LV_PART_MAIN);
+    lv_obj_set_style_shadow_offset_x(panel3,0,LV_PART_MAIN);
+    lv_obj_set_style_shadow_offset_y(panel3,3,LV_PART_MAIN);
+    // lv_obj_t * panel_value = lv_obj_create(panel3);
+    // lv_obj_set_size(panel_value,30,30);
+    // lv_obj_align_to(panel_value,arc,LV_ALIGN_CENTER,0,0);
+    // lv_obj_set_style_radius(panel_value,360,LV_PART_MAIN);
+    // lv_obj_set_style_bg_color(panel_value,lv_color_make(12,25,30),LV_PART_MAIN);
+    // lv_obj_set_style_bg_grad_color(panel_value,lv_color_make(25,28,38),LV_PART_MAIN);
+    // lv_obj_set_style_bg_grad_dir(panel_value,LV_GRAD_DIR_VER,LV_PART_MAIN);
+    // lv_obj_set_style_arc_width(panel_value,0.2,LV_PART_MAIN);
+    // lv_obj_set_style_border_color(panel3,lv_color_make(90,100,110),LV_PART_MAIN);
+    
+    lv_obj_t * label = lv_label_create(panel3);
+    lv_label_set_text_fmt(label,"%d",23);
+    lv_obj_align(label,LV_ALIGN_CENTER,0,0);
+    lv_obj_set_style_bg_opa(label,0,LV_PART_MAIN);
+    //lv_obj_set_style_border_width(label,0,LV_PART_MAIN);
+    //lv_obj_set_style_border_color(label,0,LV_PART_MAIN);
+    //lv_style_set_text_font(label,&LV_FONT_MONTSERRAT_18,LV_PART_MAIN);
+    lv_obj_set_style_text_color(panel3,lv_color_make(255,255,255),LV_PART_MAIN);
+    lv_obj_add_event_cb(arc, value_changed_event_cb, LV_EVENT_VALUE_CHANGED, label);
 
+
+    lv_obj_remove_style(arc, NULL, LV_PART_KNOB);
+    lv_obj_set_style_arc_width(arc,5,LV_PART_MAIN);
+    lv_obj_set_style_arc_width(arc,5,LV_PART_INDICATOR);
+    lv_obj_set_style_arc_color(arc, lv_color_hex(0x0f0f0f), LV_PART_MAIN);
+    lv_obj_set_style_arc_rounded(arc, true, LV_PART_MAIN);
+
+
+    //lv_obj_center(arc);
+
+    /*Manually update the label for the first time*/
+    lv_obj_send_event(arc, LV_EVENT_VALUE_CHANGED,NULL);
+    return arc;
+
+}
+lv_obj_t * lv_example_arc_3(void)
+{
+    /*Create an Arc*/
+    lv_obj_t * arc = lv_arc_create(lv_screen_active());
+    lv_obj_set_size(arc, 60, 60);
+    //lv_arc_set_rotation(arc, 135);
+    lv_arc_set_bg_angles(arc, 120, 60);
+    lv_arc_set_range(arc,0,100);
+    lv_arc_set_value(arc,23);
+    lv_obj_align(arc,LV_ALIGN_TOP_RIGHT,-10,10);
+    lv_obj_set_style_radius(arc,360,LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(arc,LV_OPA_COVER,LV_PART_MAIN);
+    lv_obj_set_style_bg_color(arc,lv_color_make(30,35,45),LV_PART_MAIN);
+    lv_obj_set_style_pad_all(arc,3,LV_PART_MAIN);
+    
+    lv_obj_t * panel3 = lv_obj_create(arc);
+     lv_obj_set_size(panel3,42,42);
+     lv_obj_align(panel3,LV_ALIGN_CENTER,0,0);
+    // lv_obj_set_style_radius(panel3,360,LV_PART_MAIN);
+    // lv_obj_set_style_bg_color(panel3,lv_color_make(100,100,100),LV_PART_MAIN);
+    // lv_obj_set_style_bg_grad_color(panel3,lv_color_make(60,65,75),LV_PART_MAIN);
+    // lv_obj_set_style_bg_grad_dir(panel3,LV_GRAD_DIR_VER,LV_PART_MAIN);
+    // lv_obj_set_style_arc_width(panel3,0.2,LV_PART_MAIN);
+    // lv_obj_set_style_shadow_color(panel3,lv_color_make(5,10,15),LV_PART_MAIN);
+    // lv_obj_set_style_shadow_width(panel3,8,LV_PART_MAIN);
+    // lv_obj_set_style_shadow_spread(panel3,0,LV_PART_MAIN);
+    // lv_obj_set_style_shadow_offset_x(panel3,0,LV_PART_MAIN);
+    // lv_obj_set_style_shadow_offset_y(panel3,3,LV_PART_MAIN);
+    // lv_obj_t * panel_value = lv_obj_create(panel3);
+    // lv_obj_set_size(panel_value,30,30);
+    // lv_obj_align_to(panel_value,arc,LV_ALIGN_CENTER,0,0);
+    // lv_obj_set_style_radius(panel_value,360,LV_PART_MAIN);
+    // lv_obj_set_style_bg_color(panel_value,lv_color_make(12,25,30),LV_PART_MAIN);
+    // lv_obj_set_style_bg_grad_color(panel_value,lv_color_make(25,28,38),LV_PART_MAIN);
+    // lv_obj_set_style_bg_grad_dir(panel_value,LV_GRAD_DIR_VER,LV_PART_MAIN);
+    // lv_obj_set_style_arc_width(panel_value,0.2,LV_PART_MAIN);
+    // lv_obj_set_style_border_color(panel3,lv_color_make(90,100,110),LV_PART_MAIN);
+    
+    lv_obj_t * label = lv_label_create(panel3);
+    lv_label_set_text_fmt(label,"%d",23);
+    lv_obj_align(label,LV_ALIGN_CENTER,0,0);
+    lv_obj_set_style_bg_opa(label,0,LV_PART_MAIN);
+    //lv_obj_set_style_border_width(label,0,LV_PART_MAIN);
+    //lv_obj_set_style_border_color(label,0,LV_PART_MAIN);
+    //lv_style_set_text_font(label,&LV_FONT_MONTSERRAT_18,LV_PART_MAIN);
+    lv_obj_set_style_text_color(panel3,lv_color_make(255,255,255),LV_PART_MAIN);
+    lv_obj_add_event_cb(arc, value_changed_event_cb, LV_EVENT_VALUE_CHANGED, label);
+
+
+    lv_obj_remove_style(arc, NULL, LV_PART_KNOB);
+    lv_obj_set_style_arc_width(arc,5,LV_PART_MAIN);
+    lv_obj_set_style_arc_width(arc,5,LV_PART_INDICATOR);
+    lv_obj_set_style_arc_color(arc, lv_color_hex(0x0f0f0f), LV_PART_MAIN);
+    lv_obj_set_style_arc_rounded(arc, true, LV_PART_MAIN);
+
+
+    //lv_obj_center(arc);
+
+    /*Manually update the label for the first time*/
+    //lv_obj_send_event(arc, LV_EVENT_VALUE_CHANGED,NULL);
+
+    return arc;
+
+}
 static void value_changed_event_cb(lv_event_t * e)
 {
     lv_obj_t * arc = lv_event_get_target_obj(e);
     lv_obj_t * label =(lv_obj_t*)lv_event_get_user_data(e);
+    int32_t value = lv_arc_get_value(arc);
+    //Serial.printf("value%llu\n",value);
 
-    lv_label_set_text_fmt(label, "%" LV_PRId32 "%%", lv_arc_get_value(arc));
-
-    /*Rotate the label to the current position of the arc*/
-    //lv_arc_rotate_obj_to_angle(arc, label, 25);
+    lv_label_set_text_fmt(label,"%d",value);
+    LV_LOG_USER(value);
 }
 
 
