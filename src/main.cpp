@@ -1,9 +1,9 @@
-// #include <Arduino.h>
-#include <WiFi.h>
+ #include <Arduino.h>
+//#include <WiFi.h>
 // #include <HTTPClient.h>
 // #include <ArduinoJson.h>
-// #include <DataProcess.h>
-#include <FansControl.h>
+//#include <DataProcess.h>
+//#include <FansControl.h>
 // #include <U8g2lib.h>
 
 // U8G2_SSD1306_128X64_NONAME_F_HW_I2C oled(U8G2_R0,SDA,SCL,U8X8_PIN_NONE);
@@ -23,8 +23,7 @@
 // int disk_usage = -1;
 
 
-// DataProcess *DP = new DataProcess();
-FansControl *FC = new FansControl(11,5000,0,8);
+
 
 
 // WiFiClient client;
@@ -168,6 +167,8 @@ FansControl *FC = new FansControl(11,5000,0,8);
  *Be sure to read the docs here: https://docs.lvgl.io/master/get-started/platforms/arduino.html  */
 
 #include <lvgl.h>
+#include "DataProcess.h"
+#include "FansControl.h"
 
 #if LV_USE_TFT_ESPI
 #include <TFT_eSPI.h>
@@ -178,41 +179,34 @@ lv_obj_t * disk_arc;
 lv_obj_t * bg;
 lv_obj_t * bg_bottom;
 lv_obj_t * chart;
+lv_obj_t *net_up_label;
+lv_obj_t *net_down_label;
 lv_chart_series_t * ser1;
 lv_chart_series_t * ser2;
+DataProcess *DP = new DataProcess();
+FansControl *FC = new FansControl(11,5000,0,8);
+
 
 static void value_changed_event_cb(lv_event_t * e);
-
+int TempControl(int mode,DataProcess * DP,FansControl *FC);
 lv_obj_t * lv_example_arc_1(void);
 lv_obj_t * lv_example_arc_2(void);
 lv_obj_t * lv_example_arc_3(void);
-
 lv_obj_t * lv_example_chart_1(void);
-lv_obj_t * lv_net_label_1(void);
-/*To use the built-in examples and demos of LVGL uncomment the includes below respectively.
- *You also need to copy `lvgl/examples` to `lvgl/src/examples`. Similarly for the demos `lvgl/demos` to `lvgl/src/demos`.
- *Note that the `lv_examples` library is for LVGL v7 and you shouldn't install it for this version (since LVGL v8)
- *as the examples and demos are now part of the main LVGL library. */
+lv_obj_t * lv_net_label_up(void);
+lv_obj_t * lv_net_label_down(void);
+static void set_temp(void * bar, int32_t temp);
+void lv_example_bar_3(void);
 
-//#include <examples/lv_examples.h>
-//#include <demos/lv_demos.h>
 
-/*Set to your screen resolution*/
 #define TFT_HOR_RES   240
 #define TFT_VER_RES   240
 
-/*LVGL draw into this buffer, 1/10 screen size usually works well. The size is in bytes*/
 #define DRAW_BUF_SIZE (TFT_HOR_RES * TFT_VER_RES / 10 * (LV_COLOR_DEPTH / 8))
+
 uint32_t draw_buf[DRAW_BUF_SIZE / 4];
 
-#if LV_USE_LOG != 0
-void my_print( lv_log_level_t level, const char * buf )
-{
-    LV_UNUSED(level);
-    Serial.println(buf);
-    Serial.flush();
-}
-#endif
+
 
 /* LVGL calls it when a rendered image needs to copied to the display*/
 void my_disp_flush( lv_display_t *disp, const lv_area_t *area, uint8_t * px_map)
@@ -231,39 +225,11 @@ void my_disp_flush( lv_display_t *disp, const lv_area_t *area, uint8_t * px_map)
     lv_disp_flush_ready(disp);
 }
 
-/*Read the touchpad*/
-void my_touchpad_read( lv_indev_t * indev, lv_indev_data_t * data )
-{
-    /*For example  ("my_..." functions needs to be implemented by you)
-    int32_t x, y;
-    bool touched = my_get_touch( &x, &y );
-
-    if(!touched) {
-        data->state = LV_INDEV_STATE_RELEASED;
-    } else {
-        data->state = LV_INDEV_STATE_PRESSED;
-
-        data->point.x = x;
-        data->point.y = y;
-    }
-     */
-}
-
 void setup()
 {
-    
-    FC->Stop();
-    Serial.begin( 115200 );
-
     lv_init();
-
-    /*Set a tick source so that LVGL will know how much time elapsed. */
     lv_tick_set_cb(millis);
 
-    /* register print function for debugging */
-#if LV_USE_LOG != 0
-    lv_log_register_print_cb( my_print );
-#endif
 
     lv_display_t * disp;
 #if LV_USE_TFT_ESPI
@@ -276,32 +242,7 @@ void setup()
     lv_display_set_buffers(disp, draw_buf, NULL, sizeof(draw_buf), LV_DISPLAY_RENDER_MODE_PARTIAL);
 #endif
 
-    /*Initialize the (dummy) input device driver*/
-    lv_indev_t * indev = lv_indev_create();
-    lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER); /*Touchpad should have POINTER type*/
-    lv_indev_set_read_cb(indev, my_touchpad_read);
-
-    /* Create a simple label
-     * ---------------------
-     lv_obj_t *label = lv_label_create( lv_scr_act() );
-     lv_label_set_text( label, "Hello Arduino, I'm LVGL!" );
-     lv_obj_align( label, LV_ALIGN_CENTER, 0, 0 );
-
-     * Try an example. See all the examples
-     *  - Online: https://docs.lvgl.io/master/examples.html
-     *  - Source codes: https://github.com/lvgl/lvgl/tree/master/examples
-     * ----------------------------------------------------------------
-
-     lv_example_btn_1();
-
-     * Or try out a demo. Don't forget to enable the demos in lv_conf.h. E.g. LV_USE_DEMOS_WIDGETS
-     * -------------------------------------------------------------------------------------------
-
-     
-     */
-
-    //lv_demo_widgets();
-    
+//////////////////////////////////////////////////////////////////////////////////////////
     lv_obj_t * src = lv_screen_active();
     lv_obj_set_pos(src,0,0);
     lv_obj_set_size(src,240,240);
@@ -323,12 +264,15 @@ void setup()
     ram_arc = lv_example_arc_2();
     disk_arc = lv_example_arc_3();
     chart = lv_example_chart_1();
-    //lv_net_label_1();
+    net_up_label = lv_net_label_up();
+    net_down_label = lv_net_label_down();
+    lv_example_bar_3();
 
     //Serial
     Serial.begin(115200);
     
     Serial.println( "Setup done" );
+//////////////////////////////////////////////////////////////////////////////////////////
 }
 
 void loop()
@@ -347,6 +291,8 @@ void loop()
       
       lv_chart_set_next_value(chart,ser1, cpu_data);
       lv_chart_set_next_value(chart,ser2, cpu_data+30);
+      lv_label_set_text_fmt(net_up_label,"u%.1fMB",cpu_data);
+      lv_label_set_text_fmt(net_down_label,"u%.1fMB",cpu_data+30);
       lv_chart_refresh(chart);
     }
     lv_task_handler(); /* let the GUI do its work */
@@ -561,7 +507,23 @@ static void value_changed_event_cb(lv_event_t * e)
     lv_label_set_text_fmt(label,"%d",value);
     LV_LOG_USER(value);
 }
+lv_obj_t * lv_net_label_up(void)
+{
+    lv_obj_t * label_up = lv_label_create(bg_bottom);
+    lv_obj_align(label_up,LV_ALIGN_TOP_LEFT,-5,0);
+    lv_label_set_text_fmt(label_up,"u%dMB",30);
 
+    return label_up;
+    
+}
+lv_obj_t * lv_net_label_down(void)
+{
+    lv_obj_t * label_down = lv_label_create(bg_bottom);
+    lv_obj_align(label_down,LV_ALIGN_TOP_LEFT,-5,22);
+    lv_label_set_text_fmt(label_down,"n%dMB",40);
+    return label_down;
+    
+}
 lv_obj_t * lv_example_chart_1(void)
 {
     /*Create a chart*/
@@ -579,25 +541,92 @@ lv_obj_t * lv_example_chart_1(void)
     for(i = 0; i < 10; i++) {
         /*Set the next points on 'ser1'*/
         lv_chart_set_next_value(chart, ser1, lv_rand(10, 50));
-
         lv_chart_set_next_value(chart, ser2, lv_rand(10, 50));
     }
 
     lv_chart_refresh(chart); /*Required after direct set*/
 
-    lv_obj_t * label_up = lv_label_create(bg_bottom);
-    lv_obj_align(label_up,LV_ALIGN_TOP_LEFT,-5,0);
-    lv_label_set_text_fmt(label_up,"u%dMB",30);
-
-    lv_obj_t * label_down = lv_label_create(bg_bottom);
-    lv_obj_align(label_down,LV_ALIGN_TOP_LEFT,-5,22);
-    lv_label_set_text_fmt(label_down,"n%dMB",40);
     return chart;
 }
-
-lv_obj_t * lv_net_label_1(void)
+static void set_temp(void * bar, int32_t temp)
 {
+    lv_bar_set_value((lv_obj_t *)bar, temp, LV_ANIM_ON);
+}
+void lv_example_bar_3(void)
+{
+    static lv_style_t style_indic;
 
+    lv_style_init(&style_indic);
+    lv_style_set_bg_opa(&style_indic, LV_OPA_COVER);
+    lv_style_set_bg_color(&style_indic, lv_palette_main(LV_PALETTE_BLUE));
+    lv_style_set_bg_grad_color(&style_indic, lv_palette_main(LV_PALETTE_RED));
+    lv_style_set_bg_grad_dir(&style_indic, LV_GRAD_DIR_HOR);
+
+
+    lv_obj_t * bar = lv_bar_create(bg_bottom);
+    lv_obj_add_style(bar, &style_indic, LV_PART_INDICATOR);
+    lv_obj_set_size(bar, 130, 10);
+    lv_obj_align(bar,LV_ALIGN_BOTTOM_LEFT,70,0);
+    lv_bar_set_range(bar, 0, 60);
+    lv_obj_t * barlabel = lv_label_create(bg_bottom);
+    lv_label_set_text_fmt(barlabel,"CPU:%d°C",40);
+    lv_obj_align_to(barlabel,bar,LV_ALIGN_OUT_LEFT_MID,-8,0);
+
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_exec_cb(&a, set_temp);
+    lv_anim_set_duration(&a, 3000);
+    lv_anim_set_playback_duration(&a, 3000);
+    lv_anim_set_var(&a, bar);
+    lv_anim_set_values(&a, 0, 60);
+    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
+    lv_anim_start(&a);
 }
 
 
+
+
+int TempControl(int mode,DataProcess * DP,FansControl *FC)
+{
+    // if(0 == mode)
+    // {
+    //     // if(DP->cpu_tmp <30)
+    //     // {
+    //     //     FC->SetSpeed(0);
+    //     // }
+    //     // else
+    //     // {
+    //     //     FC->SetSpeed(DP->cpu_tmp * 1.6);
+    //     // }
+    //     FC->SetSpeed(0);
+    //     //Serial.printf("Fans Normal Mode.");
+    //     return 1;
+
+    // }
+    // // mode = 0 normal mode
+    // else if (1 == mode)
+    // {
+    //     //mode = 1 silent mode
+    //     //Serial.printf("Fans Silent Mode.");
+    //     return 1;
+    // }
+    
+    // else if (2 == mode)
+    // {
+    //     //mode = 2 full mode 
+    //     //Serial.printf("Fans Full Mode.");
+    //     return 1;
+    // }
+    // else
+    // {
+    //     //Serial.printf("TempControlStartFailed.");
+    //     return -1;
+    // }
+
+    Serial.printf("1");
+    
+    
+
+   
+
+}
