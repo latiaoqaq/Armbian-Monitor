@@ -181,8 +181,11 @@ lv_obj_t * bg_bottom;
 lv_obj_t * chart;
 lv_obj_t *net_up_label;
 lv_obj_t *net_down_label;
+lv_obj_t *cputempbar;
+lv_obj_t *fansspeedbar;
 lv_chart_series_t * ser1;
 lv_chart_series_t * ser2;
+
 DataProcess *DP = new DataProcess();
 FansControl *FC = new FansControl(11,5000,0,8);
 
@@ -196,7 +199,8 @@ lv_obj_t * lv_example_chart_1(void);
 lv_obj_t * lv_net_label_up(void);
 lv_obj_t * lv_net_label_down(void);
 static void set_temp(void * bar, int32_t temp);
-void lv_example_bar_3(void);
+lv_obj_t * lv_example_bar_3(void);
+lv_obj_t * lv_example_bar_4(void);
 
 
 #define TFT_HOR_RES   240
@@ -266,7 +270,8 @@ void setup()
     chart = lv_example_chart_1();
     net_up_label = lv_net_label_up();
     net_down_label = lv_net_label_down();
-    lv_example_bar_3();
+    cputempbar = lv_example_bar_3();
+    fansspeedbar = lv_example_bar_4();
 
     //Serial
     Serial.begin(115200);
@@ -548,11 +553,7 @@ lv_obj_t * lv_example_chart_1(void)
 
     return chart;
 }
-static void set_temp(void * bar, int32_t temp)
-{
-    lv_bar_set_value((lv_obj_t *)bar, temp, LV_ANIM_ON);
-}
-void lv_example_bar_3(void)
+lv_obj_t * lv_example_bar_3(void)
 {
     static lv_style_t style_indic;
 
@@ -571,16 +572,28 @@ void lv_example_bar_3(void)
     lv_obj_t * barlabel = lv_label_create(bg_bottom);
     lv_label_set_text_fmt(barlabel,"CPU:%d°C",40);
     lv_obj_align_to(barlabel,bar,LV_ALIGN_OUT_LEFT_MID,-8,0);
+    return bar;
+}
+lv_obj_t * lv_example_bar_4(void)
+{
+    static lv_style_t style_indic;
 
-    lv_anim_t a;
-    lv_anim_init(&a);
-    lv_anim_set_exec_cb(&a, set_temp);
-    lv_anim_set_duration(&a, 3000);
-    lv_anim_set_playback_duration(&a, 3000);
-    lv_anim_set_var(&a, bar);
-    lv_anim_set_values(&a, 0, 60);
-    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
-    lv_anim_start(&a);
+    // lv_style_init(&style_indic);
+    // lv_style_set_bg_opa(&style_indic, LV_OPA_COVER);
+    // lv_style_set_bg_color(&style_indic, lv_palette_main(LV_PALETTE_BLUE));
+    // lv_style_set_bg_grad_color(&style_indic, lv_palette_main(LV_PALETTE_RED));
+    // lv_style_set_bg_grad_dir(&style_indic, LV_GRAD_DIR_HOR);
+
+
+    lv_obj_t * bar = lv_bar_create(bg_bottom);
+    //lv_obj_add_style(bar, &style_indic, LV_PART_INDICATOR);
+    lv_obj_set_size(bar, 130, 10);
+    lv_obj_align(bar,LV_ALIGN_LEFT_MID,70,15);
+    lv_bar_set_range(bar, 0, 60);
+    lv_obj_t * barlabel = lv_label_create(bg_bottom);
+    lv_label_set_text_fmt(barlabel,"Fans:%d%",40);
+    lv_obj_align_to(barlabel,bar,LV_ALIGN_OUT_LEFT_MID,-8,0);
+    return bar;
 }
 
 
