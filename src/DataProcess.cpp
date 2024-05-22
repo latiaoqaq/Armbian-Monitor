@@ -53,8 +53,10 @@ void DataProcess::PrintData()
     Serial.println(cpu_tmp);
     Serial.printf("cpu_usage:");
     Serial.println(cpu_usage);
-    Serial.printf("net_usage:");
-    Serial.println(net_usage);
+    Serial.printf("net_up_speed:");
+    Serial.println(net_up_speed);
+    Serial.printf("net_down_speed:");
+    Serial.println(net_down_speed);
     Serial.printf("disk_usage:");
     Serial.println(disk_usage);
     Serial.printf("ram_usage:");
