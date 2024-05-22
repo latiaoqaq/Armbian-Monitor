@@ -307,68 +307,65 @@ void loop()
     else
     {
         client.write('1');
-        if (client.available() > 0)
-        {
-            client.write('1');
-            if (client.available() > 0)
-            {
-                recvdata = client.readStringUntil('\n');
-                Serial.println(recvdata);
-                DP->WriteData(recvdata);
-                DP->PrintData();
-                // 3 arc set
-                lv_arc_set_value(cpu_arc, DP->cpu_usage);
-                lv_obj_send_event(cpu_arc, LV_EVENT_VALUE_CHANGED, NULL);
-                lv_arc_set_value(ram_arc, DP->ram_usage);
-                lv_obj_send_event(ram_arc, LV_EVENT_VALUE_CHANGED, NULL);
-                lv_arc_set_value(disk_arc, DP->disk_usage);
-                lv_obj_send_event(disk_arc, LV_EVENT_VALUE_CHANGED, NULL);
 
-                // bar set
-                lv_bar_set_value(cputempbar, DP->cpu_tmp, LV_ANIM_ON);
-                lv_obj_send_event(cputempbar, LV_EVENT_VALUE_CHANGED, NULL);
-                // chart set
-                lv_chart_set_next_value(chart, ser1, DP->net_down_speed);
-                lv_chart_set_next_value(chart, ser2, DP->net_up_speed);
-                Serial.printf("net_up_speed is:%d\n", DP->net_up_speed);
-                if (DP->net_up_speed < 1000)
-                {
-                    lv_label_set_text_fmt(net_up_label, "u%dKB", DP->net_up_speed);
-                }
-                else
-                {
-                    lv_label_set_text_fmt(net_up_label, "u%d.%dMB", DP->net_up_speed / 1000, DP->net_up_speed % 1000 / 100);
-                }
-                if (DP->net_down_speed < 1000)
-                {
-                    lv_label_set_text_fmt(net_down_label, "n%dKB", DP->net_down_speed);
-                }
-                else
-                {
-                    lv_label_set_text_fmt(net_down_label, "n%d.%dMB", DP->net_down_speed / 1000, DP->net_down_speed % 1000 / 100);
-                }
-                lv_chart_refresh(chart);
+        recvdata = "";
+        recvdata = client.readStringUntil('\n');
+        if (recvdata!="")
+        {
+            Serial.println(recvdata);
+            DP->WriteData(recvdata);
+            DP->PrintData();
+            // 3 arc set
+            lv_arc_set_value(cpu_arc, DP->cpu_usage);
+            lv_obj_send_event(cpu_arc, LV_EVENT_VALUE_CHANGED, NULL);
+            lv_arc_set_value(ram_arc, DP->ram_usage);
+            lv_obj_send_event(ram_arc, LV_EVENT_VALUE_CHANGED, NULL);
+            lv_arc_set_value(disk_arc, DP->disk_usage);
+            lv_obj_send_event(disk_arc, LV_EVENT_VALUE_CHANGED, NULL);
+
+            // bar set
+            lv_bar_set_value(cputempbar, DP->cpu_tmp, LV_ANIM_ON);
+            lv_obj_send_event(cputempbar, LV_EVENT_VALUE_CHANGED, NULL);
+            // chart set
+            lv_chart_set_next_value(chart, ser1, DP->net_down_speed);
+            lv_chart_set_next_value(chart, ser2, DP->net_up_speed);
+            if (DP->net_up_speed < 1000)
+            {
+                lv_label_set_text_fmt(net_up_label, "u%dKB", DP->net_up_speed);
             }
+            else
+            {
+                lv_label_set_text_fmt(net_up_label, "u%d.%dMB", DP->net_up_speed / 1000, DP->net_up_speed % 1000 / 100);
+            }
+            if (DP->net_down_speed < 1000)
+            {
+                lv_label_set_text_fmt(net_down_label, "n%dKB", DP->net_down_speed);
+            }
+            else
+            {
+                lv_label_set_text_fmt(net_down_label, "n%d.%dMB", DP->net_down_speed / 1000, DP->net_down_speed % 1000 / 100);
+            }
+            lv_chart_refresh(chart);
         }
     }
-    if (Serial.available())
-    {
-        String rcvdata = Serial.readStringUntil('\n');
-        int cpu_data = rcvdata.toInt();
-        Serial.println(cpu_data);
-        lv_arc_set_value(cpu_arc, cpu_data);
-        lv_obj_send_event(cpu_arc, LV_EVENT_VALUE_CHANGED, NULL);
-        lv_arc_set_value(disk_arc, cpu_data);
-        lv_obj_send_event(disk_arc, LV_EVENT_VALUE_CHANGED, NULL);
-        lv_arc_set_value(ram_arc, cpu_data);
-        lv_obj_send_event(ram_arc, LV_EVENT_VALUE_CHANGED, NULL);
+    // if (Serial.available())
+    // {
+    //     String rcvdata = Serial.readStringUntil('\n');
+    //     int cpu_data = rcvdata.toInt();
+    //     Serial.println(cpu_data);
+    //     lv_arc_set_value(cpu_arc, cpu_data);
+    //     lv_obj_send_event(cpu_arc, LV_EVENT_VALUE_CHANGED, NULL);
+    //     lv_arc_set_value(disk_arc, cpu_data);
+    //     lv_obj_send_event(disk_arc, LV_EVENT_VALUE_CHANGED, NULL);
+    //     lv_arc_set_value(ram_arc, cpu_data);
+    //     lv_obj_send_event(ram_arc, LV_EVENT_VALUE_CHANGED, NULL);
 
-        lv_chart_set_next_value(chart, ser1, cpu_data);
-        lv_chart_set_next_value(chart, ser2, cpu_data + 30);
-        lv_label_set_text_fmt(net_up_label, "u%.1fMB", cpu_data);
-        lv_label_set_text_fmt(net_down_label, "u%.1fMB", cpu_data + 30);
-        lv_chart_refresh(chart);
-    }
+    //     lv_chart_set_next_value(chart, ser1, cpu_data);
+    //     lv_chart_set_next_value(chart, ser2, cpu_data + 30);
+    //     lv_label_set_text_fmt(net_up_label, "u%.1fMB", cpu_data);
+    //     lv_label_set_text_fmt(net_down_label, "u%.1fMB", cpu_data + 30);
+    //     lv_chart_refresh(chart);
+    // }
     lv_task_handler(); /* let the GUI do its work */
     delay(5);          /* let this time pass */
 }
