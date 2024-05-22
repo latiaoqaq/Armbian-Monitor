@@ -3,7 +3,7 @@
 // #include <HTTPClient.h>
 // #include <ArduinoJson.h>
 // #include <DataProcess.h>
-// #include <FansControl.h>
+#include <FansControl.h>
 // #include <U8g2lib.h>
 
 // U8G2_SSD1306_128X64_NONAME_F_HW_I2C oled(U8G2_R0,SDA,SCL,U8X8_PIN_NONE);
@@ -24,7 +24,7 @@
 
 
 // DataProcess *DP = new DataProcess();
-// FansControl *FC = new FansControl(11,5000,0,8);
+FansControl *FC = new FansControl(11,5000,0,8);
 
 
 // WiFiClient client;
@@ -175,10 +175,20 @@
 lv_obj_t * cpu_arc;
 lv_obj_t * ram_arc;
 lv_obj_t * disk_arc;
+lv_obj_t * bg;
+lv_obj_t * bg_bottom;
+lv_obj_t * chart;
+lv_chart_series_t * ser1;
+lv_chart_series_t * ser2;
+
 static void value_changed_event_cb(lv_event_t * e);
+
 lv_obj_t * lv_example_arc_1(void);
 lv_obj_t * lv_example_arc_2(void);
 lv_obj_t * lv_example_arc_3(void);
+
+lv_obj_t * lv_example_chart_1(void);
+lv_obj_t * lv_net_label_1(void);
 /*To use the built-in examples and demos of LVGL uncomment the includes below respectively.
  *You also need to copy `lvgl/examples` to `lvgl/src/examples`. Similarly for the demos `lvgl/demos` to `lvgl/src/demos`.
  *Note that the `lv_examples` library is for LVGL v7 and you shouldn't install it for this version (since LVGL v8)
@@ -241,11 +251,9 @@ void my_touchpad_read( lv_indev_t * indev, lv_indev_data_t * data )
 
 void setup()
 {
-    String LVGL_Arduino = "Hello Arduino! ";
-    LVGL_Arduino += String('V') + lv_version_major() + "." + lv_version_minor() + "." + lv_version_patch();
-
+    
+    FC->Stop();
     Serial.begin( 115200 );
-    Serial.println( LVGL_Arduino );
 
     lv_init();
 
@@ -293,14 +301,29 @@ void setup()
      */
 
     //lv_demo_widgets();
+    
     lv_obj_t * src = lv_screen_active();
     lv_obj_set_pos(src,0,0);
     lv_obj_set_size(src,240,240);
     lv_obj_set_style_bg_color(src,lv_color_hex(0x3B2D23),0);
+    bg = lv_obj_create(lv_screen_active());
+    lv_obj_set_size(bg,230,100);
+    lv_obj_align(bg,LV_ALIGN_TOP_MID,0,0);
+    lv_obj_set_style_bg_color(bg,lv_color_make(193,193,197),LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(bg,100,LV_PART_MAIN);
+    
+
+    bg_bottom = lv_obj_create(lv_screen_active());
+    lv_obj_set_size(bg_bottom,230,120);
+    lv_obj_align(bg_bottom,LV_ALIGN_BOTTOM_MID,0,-10);
+    lv_obj_set_style_bg_color(bg_bottom,lv_color_make(193,193,197),LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(bg_bottom,100,LV_PART_MAIN);
     //lv_obj_set_style_bg_opa(src,50,0);
     cpu_arc = lv_example_arc_1();
     ram_arc = lv_example_arc_2();
     disk_arc = lv_example_arc_3();
+    chart = lv_example_chart_1();
+    //lv_net_label_1();
 
     //Serial
     Serial.begin(115200);
@@ -321,6 +344,10 @@ void loop()
       lv_obj_send_event(disk_arc, LV_EVENT_VALUE_CHANGED,NULL);
       lv_arc_set_value(ram_arc,cpu_data);
       lv_obj_send_event(ram_arc, LV_EVENT_VALUE_CHANGED,NULL);
+      
+      lv_chart_set_next_value(chart,ser1, cpu_data);
+      lv_chart_set_next_value(chart,ser2, cpu_data+30);
+      lv_chart_refresh(chart);
     }
     lv_task_handler(); /* let the GUI do its work */
     delay(5); /* let this time pass */
@@ -329,13 +356,15 @@ void loop()
 lv_obj_t* lv_example_arc_1(void)
 {
     /*Create an Arc*/
-    lv_obj_t * arc = lv_arc_create(lv_screen_active());
+
+
+    lv_obj_t * arc = lv_arc_create(bg);
     lv_obj_set_size(arc, 60, 60);
     //lv_arc_set_rotation(arc, 135);
     lv_arc_set_bg_angles(arc, 120, 60);
     lv_arc_set_range(arc,0,80);
     lv_arc_set_value(arc,23);
-    lv_obj_align(arc,LV_ALIGN_TOP_LEFT,10,10);
+    lv_obj_align(arc,LV_ALIGN_TOP_LEFT,0,0);
     lv_obj_set_style_radius(arc,360,LV_PART_MAIN);
     lv_obj_set_style_bg_opa(arc,LV_OPA_COVER,LV_PART_MAIN);
     lv_obj_set_style_bg_color(arc,lv_color_make(30,35,45),LV_PART_MAIN);
@@ -385,6 +414,7 @@ lv_obj_t* lv_example_arc_1(void)
     lv_obj_set_style_arc_rounded(arc, true, LV_PART_MAIN);
 
 
+    
     //lv_obj_center(arc);
 
     /*Manually update the label for the first time*/
@@ -397,13 +427,13 @@ lv_obj_t* lv_example_arc_1(void)
 lv_obj_t * lv_example_arc_2(void)
 {
     /*Create an Arc*/
-    lv_obj_t * arc = lv_arc_create(lv_screen_active());
+    lv_obj_t * arc = lv_arc_create(bg);
     lv_obj_set_size(arc, 60, 60);
     //lv_arc_set_rotation(arc, 135);
     lv_arc_set_bg_angles(arc, 120, 60);
     lv_arc_set_range(arc,0,4096);
     lv_arc_set_value(arc,23);
-    lv_obj_align(arc,LV_ALIGN_TOP_MID,0,10);
+    lv_obj_align(arc,LV_ALIGN_TOP_MID,0,0);
     lv_obj_set_style_radius(arc,360,LV_PART_MAIN);
     lv_obj_set_style_bg_opa(arc,LV_OPA_COVER,LV_PART_MAIN);
     lv_obj_set_style_bg_color(arc,lv_color_make(30,35,45),LV_PART_MAIN);
@@ -460,13 +490,13 @@ lv_obj_t * lv_example_arc_2(void)
 lv_obj_t * lv_example_arc_3(void)
 {
     /*Create an Arc*/
-    lv_obj_t * arc = lv_arc_create(lv_screen_active());
+    lv_obj_t * arc = lv_arc_create(bg);
     lv_obj_set_size(arc, 60, 60);
     //lv_arc_set_rotation(arc, 135);
     lv_arc_set_bg_angles(arc, 120, 60);
     lv_arc_set_range(arc,0,100);
     lv_arc_set_value(arc,23);
-    lv_obj_align(arc,LV_ALIGN_TOP_RIGHT,-10,10);
+    lv_obj_align(arc,LV_ALIGN_TOP_RIGHT,0,0);
     lv_obj_set_style_radius(arc,360,LV_PART_MAIN);
     lv_obj_set_style_bg_opa(arc,LV_OPA_COVER,LV_PART_MAIN);
     lv_obj_set_style_bg_color(arc,lv_color_make(30,35,45),LV_PART_MAIN);
@@ -530,6 +560,44 @@ static void value_changed_event_cb(lv_event_t * e)
 
     lv_label_set_text_fmt(label,"%d",value);
     LV_LOG_USER(value);
+}
+
+lv_obj_t * lv_example_chart_1(void)
+{
+    /*Create a chart*/
+    chart = lv_chart_create(bg_bottom);
+    lv_obj_set_size(chart, 150, 40);
+    lv_obj_align(chart,LV_ALIGN_TOP_RIGHT,0,0);
+    lv_chart_set_type(chart, LV_CHART_TYPE_LINE);   /*Show lines and points too*/
+    lv_chart_set_update_mode(chart,LV_CHART_UPDATE_MODE_SHIFT);
+    lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, 0, 5000);
+    /*Add two data series*/
+    ser1 = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_GREEN), LV_CHART_AXIS_PRIMARY_Y);
+    ser2 = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_PRIMARY_Y);
+
+    uint32_t i;
+    for(i = 0; i < 10; i++) {
+        /*Set the next points on 'ser1'*/
+        lv_chart_set_next_value(chart, ser1, lv_rand(10, 50));
+
+        lv_chart_set_next_value(chart, ser2, lv_rand(10, 50));
+    }
+
+    lv_chart_refresh(chart); /*Required after direct set*/
+
+    lv_obj_t * label_up = lv_label_create(bg_bottom);
+    lv_obj_align(label_up,LV_ALIGN_TOP_LEFT,-5,0);
+    lv_label_set_text_fmt(label_up,"u%dMB",30);
+
+    lv_obj_t * label_down = lv_label_create(bg_bottom);
+    lv_obj_align(label_down,LV_ALIGN_TOP_LEFT,-5,22);
+    lv_label_set_text_fmt(label_down,"n%dMB",40);
+    return chart;
+}
+
+lv_obj_t * lv_net_label_1(void)
+{
+
 }
 
 

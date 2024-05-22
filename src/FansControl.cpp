@@ -16,7 +16,7 @@ FansControl::~FansControl()
 
 int FansControl::Setup()
 {
-  ledcSetup(0, 10000, 10);
+  ledcSetup(0,25000, 10);
   ledcAttachPin(13,0);
   //ledcWrite(0,1023);
   // analogReadResolution(12); // 12位分辨率
@@ -32,6 +32,6 @@ int FansControl::Start()
 
 int FansControl::Stop()
 {
-  ledcWrite(0, 0);
+  ledcWrite(0, 512);
 }
 
